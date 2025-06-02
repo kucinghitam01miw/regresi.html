@@ -1,0 +1,175 @@
+<!DOCTYPE html><html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aplikasi Statistika Regresi</title>
+  <style>
+    body {
+      background-color: #ffc7b9;
+      font-family: 'Courier New', monospace;
+      color: #596cad;
+      max-width: 90%;
+      margin: 20px auto;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 0 12px rgba(0,0,0,0.1);
+    }
+    h1 {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 20px;
+      text-align: center;
+    }
+    h2 {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 14px;
+      text-align: center;
+    }
+    input, button, textarea {
+      font-family: monospace;
+      padding: 10px;
+      margin-top: 8px;
+      margin-bottom: 20px;
+      width: 100%;
+      box-sizing: border-box;
+      border: 1px solid #aaa;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+    button {
+      background-color: #596cad;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #44578d;
+    }
+    .result {
+      background: white;
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 20px;
+    }
+    canvas {
+      margin-top: 20px;
+      max-width: 100%;
+    }
+    footer {
+      text-align: center;
+      margin-top: 40px;
+      font-size: 12px;
+    }
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 16px;
+      }
+      h2 {
+        font-size: 13px;
+      }
+      input, button {
+        font-size: 14px;
+      }
+    }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <h1>Aplikasi Statistika Regresi</h1>
+  <p>Masukkan nilai X dan Y (dipisahkan koma):</p>
+  <label for="xInput">Data X:</label>
+  <input type="text" id="xInput" placeholder="contoh: 1,2,3,4">
+  <label for="yInput">Data Y:</label>
+  <input type="text" id="yInput" placeholder="contoh: 2,4,6,8">
+  <button onclick="hitungRegresi()">Hitung</button>  <div id="hasil" class="result" style="display:none;"></div>
+  <canvas id="grafik" style="display:none;"></canvas>  <footer>
+    <strong>Zakiyyah Bintang Nur F - XI.G / 36</strong>
+  </footer>  <script>
+    function hitungRegresi() {
+      const xInput = document.getElementById('xInput').value.split(',').map(Number);
+      const yInput = document.getElementById('yInput').value.split(',').map(Number);
+      const n = xInput.length;
+
+      if (n !== yInput.length || n < 2 || xInput.includes(NaN) || yInput.includes(NaN)) {
+        alert("Pastikan input X dan Y valid dan memiliki jumlah data yang sama (minimal 2).");
+        return;
+      }
+
+      const sumX = xInput.reduce((a, b) => a + b, 0);
+      const sumY = yInput.reduce((a, b) => a + b, 0);
+      const meanX = sumX / n;
+      const meanY = sumY / n;
+
+      let ssXY = 0;
+      let ssXX = 0;
+      let ssYY = 0;
+
+      for (let i = 0; i < n; i++) {
+        const dx = xInput[i] - meanX;
+        const dy = yInput[i] - meanY;
+        ssXY += dx * dy;
+        ssXX += dx * dx;
+        ssYY += dy * dy;
+      }
+
+      const slope = ssXY / ssXX;
+      const intercept = meanY - slope * meanX;
+      const r = ssXY / Math.sqrt(ssXX * ssYY);
+      const r2 = r * r;
+
+      const hasil = `
+        <h2>Hasil Perhitungan:</h2>
+        <p>Persamaan regresi: <strong>Y = ${intercept.toFixed(2)} + ${slope.toFixed(2)}X</strong></p>
+        <p>Koefisien Korelasi (r): <strong>${r.toFixed(4)}</strong></p>
+        <p>Koefisien Determinasi (r²): <strong>${r2.toFixed(4)}</strong></p>
+      `;
+
+      document.getElementById('hasil').innerHTML = hasil;
+      document.getElementById('hasil').style.display = 'block';
+
+      // Tampilkan grafik
+      const ctx = document.getElementById('grafik').getContext('2d');
+      document.getElementById('grafik').style.display = 'block';
+
+      const prediksi = xInput.map(x => intercept + slope * x);
+
+      if (window.chart) {
+        window.chart.destroy();
+      }
+
+      window.chart = new Chart(ctx, {
+        type: 'scatter',
+        data: {
+          datasets: [
+            {
+              label: 'Data Asli',
+              data: xInput.map((x, i) => ({ x, y: yInput[i] })),
+              backgroundColor: '#596cad'
+            },
+            {
+              label: 'Regresi Linear',
+              type: 'line',
+              data: xInput.map((x, i) => ({ x, y: prediksi[i] })),
+              borderColor: '#e07a5f',
+              fill: false,
+              tension: 0
+            }
+          ]
+        },
+        options: {
+          scales: {
+            x: {
+              title: { display: true, text: 'X' }
+            },
+            y: {
+              title: { display: true, text: 'Y' }
+            }
+          },
+          plugins: {
+            legend: { labels: { font: { size: 12 } } }
+          }
+        }
+      });
+    }
+  </script></body>
+</html>
